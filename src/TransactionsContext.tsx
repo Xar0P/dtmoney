@@ -10,6 +10,12 @@ interface Transaction {
 	createdAt: string;
 }
 
+// herdar todos os campos do Transaction, menos id e createdAt
+type TransactionInput = Omit<Transaction, 'id' | 'createdAt'>;
+
+// herda somente os campos especificados
+// type TransactionInput = Pick<Transaction, 'title' | 'amount' | 'type' | 'category'>;
+
 interface Response {
 	data: {
 		transactions: [Transaction]
@@ -20,7 +26,14 @@ interface TransactionsProviderProps {
 	children: ReactNode; // Falando que ele pode receber qualquer elemento que o react entenda
 }
 
-export const TransactionsContext = createContext<Transaction[]>([]);
+interface TransactionsContextData {
+	transactions: Transaction[];
+	createTransaction: (transaction: TransactionInput) => void;
+}
+
+export const TransactionsContext = createContext<TransactionsContextData>(
+	{} as TransactionsContextData
+);
 
 export function TransactionsProvider({ children }: TransactionsProviderProps) {
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -32,8 +45,12 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 			});
 	}, []);
 
+	function createTransaction(transaction: TransactionInput) {
+		api.post('/transactions', transaction);
+	}
+
 	return (
-		<TransactionsContext.Provider value={transactions}>
+		<TransactionsContext.Provider value={{ transactions, createTransaction }}>
 			{children}
 		</TransactionsContext.Provider>
 	);
