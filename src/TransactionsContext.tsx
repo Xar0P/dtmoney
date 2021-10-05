@@ -10,8 +10,16 @@ interface Transaction {
 	createdAt: string;
 }
 
+interface TransactionInput {
+	transaction?: any;
+	title: string;
+	amount: number;
+	type: string;
+	category: string;
+}
+
 // herdar todos os campos do Transaction, menos id e createdAt
-type TransactionInput = Omit<Transaction, 'id' | 'createdAt'>;
+// type TransactionInput = Omit<Transaction, 'id' | 'createdAt'>;
 
 // herda somente os campos especificados
 // type TransactionInput = Pick<Transaction, 'title' | 'amount' | 'type' | 'category'>;
@@ -28,7 +36,7 @@ interface TransactionsProviderProps {
 
 interface TransactionsContextData {
 	transactions: Transaction[];
-	createTransaction: (transaction: TransactionInput) => void;
+	createTransaction: (transaction: TransactionInput) => Promise<void>;
 }
 
 export const TransactionsContext = createContext<TransactionsContextData>(
@@ -45,8 +53,17 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
 			});
 	}, []);
 
-	function createTransaction(transaction: TransactionInput) {
-		api.post('/transactions', transaction);
+	async function createTransaction(transactionInput: TransactionInput) {
+		const response = await api.post('/transactions', {
+			...transactionInput,
+			createdAt: new Date()
+		});
+		const { transaction } = response.data;
+
+		setTransactions([
+			...transactions,
+			transaction
+		]);
 	}
 
 	return (
